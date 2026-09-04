@@ -11,12 +11,22 @@ Kendi X (Twitter) hesabındaki **gönderileri, yanıtları ve alıntıları sile
 
 ## Kurulum
 
-1. Yeşil **Code** düğmesi → **Download ZIP** → ZIP'i bir klasöre çıkar.
-2. Chrome (veya Edge) aç, adres çubuğuna yaz: `chrome://extensions`
-3. Sağ üstten **Geliştirici modu**'nu aç.
-4. **Paketlenmemiş öğe yükle** → adım 1'de çıkardığın klasörü seç.
+1. Depoyu klonla:
+
+   ```
+   git clone https://github.com/barbaros-technologies/x-tweet-temizle.git
+   ```
+
+2. **Kodu oku.** Tamamı tek dosyada ve yorumlu: [`temizle.js`](temizle.js).
+   Hesabına erişecek bir araç kuruyorsun; ne yaptığını görmeden kurma.
+3. Chrome (veya Edge) aç, adres çubuğuna yaz: `chrome://extensions`
+4. Sağ üstten **Geliştirici modu**'nu aç.
+5. **Paketlenmemiş öğe yükle** → klonladığın klasörü seç.
 
 Listede "X Tweet Temizle" göründüyse kurulum bitti.
+
+Güncellemek için klasörde `git pull` çalıştır, sonra `chrome://extensions`
+sayfasında eklentinin **⟳ (yeniden yükle)** düğmesine bas.
 
 ## Kullanım
 
@@ -72,9 +82,10 @@ Bu bir Chrome eklentisidir. Sunucu, API anahtarı veya şifre gerektirmez;
 tarayıcıdaki açık X oturumu üzerinden arayüzü kullanarak çalışır.
 
 Adımlar:
-1. Depoyu indir, ZIP'i çıkar.
+1. git clone https://github.com/barbaros-technologies/x-tweet-temizle.git
+   (Kurmadan önce temizle.js dosyasını oku; tek dosya, yorumlu.)
 2. chrome://extensions aç, "Geliştirici modu"nu aç,
-   "Paketlenmemiş öğe yükle" ile klasörü yükle.
+   "Paketlenmemiş öğe yükle" ile klonlanan klasörü yükle.
 3. https://x.com/<KULLANICI_ADI>/with_replies adresini aç.
 4. Sayfanın sağ üstündeki panelde "Başlat" düğmesine bas.
 5. Çıkan onay penceresinde hesap adını doğrula ve onayla.
