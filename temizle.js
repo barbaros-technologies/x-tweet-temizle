@@ -18,7 +18,7 @@
   const MAX_DELAY = 2400;      // silmeler arasi en fazla bekleme
   const PAUSE_EVERY = 40;      // her N silmede bir uzun mola
   const PAUSE_MS = 30000;      // uzun mola suresi
-  const SCROLL_TRIES = 6;      // aday bulunmayinca kac kez kaydirip bakalim
+  const SCROLL_TRIES = 2;      // akis buyumeden kac tur sonra sekme bitmis sayilsin
   const STEP_TIMEOUT = 12000;  // tek bir arayuz adimi icin bekleme tavani
 
   class StopError extends Error {}
@@ -250,11 +250,15 @@
       const list = candidates();
 
       if (!list.length) {
-        if (emptyScrolls >= SCROLL_TRIES) { ui.log("Silinecek gönderi kalmadı (bu sayfada)."); return; }
-        emptyScrolls++;
-        ui.log("Aday yok, kaydırılıyor… (" + emptyScrolls + "/" + SCROLL_TRIES + ")");
-        scrollTo(0, document.body.scrollHeight);
-        await sleep(1500);
+        // Korlemesine N kez kaydirmak yerine akisin gercekten bittigini olc:
+        // sayfa yuksekligi buyumuyorsa X yeni kayit yuklemiyor demektir.
+        const before = document.body.scrollHeight;
+        scrollTo(0, before);
+        await sleep(1200);
+        const grew = document.body.scrollHeight > before;
+        emptyScrolls = grew ? 0 : emptyScrolls + 1;
+        if (emptyScrolls >= SCROLL_TRIES) { ui.log("Bu sekmede silinecek kalmadı."); return; }
+        ui.log(grew ? "Yeni kayıtlar yükleniyor…" : "Akışın sonu (" + emptyScrolls + "/" + SCROLL_TRIES + ")");
         continue;
       }
       emptyScrolls = 0;
@@ -299,7 +303,7 @@
     ].join(";");
 
     const title = document.createElement("div");
-    title.textContent = "X Tweet Temizle v1.6";
+    title.textContent = "X Tweet Temizle v1.8";
     title.style.cssText = "font-weight:600;margin-bottom:8px";
 
     const info = document.createElement("div");
@@ -364,31 +368,19 @@
     // hicbir gonderi aday sayilmaz.
     state.owner = me;
 
-    const diag = {};
-    const found = candidates(diag).length;
-    if (!found) {
-      state.owner = null;
-      alert(
-        "Bu sayfada silinecek gönderi görünmüyor.\n\n" +
-        "TEŞHİS (v1.6) — hesap: @" + me + "\n" +
-        "gönderi kutusu (article): " + diag.article + "\n" +
-        "görünür: " + diag.gorunur + "\n" +
-        "kimliği çözülen: " + diag.kimlik + "\n" +
-        "daha önce atlanan: " + diag.atlanan + "\n" +
-        "bana ait sayılan: " + diag.benim + "\n" +
-        "sil düğmesi bulunan: " + diag.caret + "\n\n" +
-        "Bu satırları olduğu gibi ilet."
-      );
-      return;
-    }
+    // Bu sekmedeki aday sayisi yalnizca BILGIDIR; sifir olsa bile islem
+    // baslatilir. Cunku gonderiler/yanitlar ile repost'lar AYRI sekmelerdedir:
+    // acik sekme bos olabilirken digerinde yuzlerce kayit durabilir. Burada
+    // iptal edersek sekme gezme hic devreye giremez.
+    const found = candidates().length;
 
     const total = totalPosts();
     if (!confirm(
       "SON ONAY — @" + me + "\n\n" +
       "HEPSİ SİLİNECEK." + (total ? " Profilinde toplam " + total + " gönderi görünüyor." : "") + "\n\n" +
-      "İşlem şu an ekranda görünen " + found + " gönderiyle başlar, sonra sayfayı " +
-      "kendisi kaydırıp yenilerini yükler ve silinecek gönderi kalmayana kadar DEVAM EDER. " +
-      "Yani bu " + found + " sayısı bir sınır değildir.\n\n" +
+      "Bu sekmede şu an " + found + " gönderi görünüyor — ama bu bir sınır değil. " +
+      "İşlem sayfayı kendisi kaydırır, sonra YANITLAR ve YENİDEN GÖNDERİLER " +
+      "sekmelerini sırayla gezer ve silinecek hiçbir şey kalmayana kadar devam eder.\n\n" +
       "Kendi gönderilerin, yanıtların ve alıntıların KALICI olarak silinir; " +
       "repost'ların geri alınır. Başkasının gönderisine dokunulmaz.\n\n" +
       "GERİ ALINAMAZ. Devam edilsin mi?"
