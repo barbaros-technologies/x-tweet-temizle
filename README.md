@@ -101,4 +101,18 @@ Adımlar:
 
 ---
 
-MIT lisansı. X/Twitter ile bağlantılı resmî bir ürün değildir.
+## Lisans
+
+**PolyForm Noncommercial 1.0.0** — tam metin: [LICENSE.md](LICENSE.md)
+
+Sade haliyle:
+
+- **Serbest:** kendin için kullanmak, incelemek, değiştirmek, dağıtmak; eğitim,
+  araştırma, hobi; kâr amacı gütmeyen kurumların kullanımı.
+- **Yasak:** **ticari kullanım ve ürünleştirme.** Bu aracı satamaz, ücretli bir
+  hizmetin veya ürünün parçası yapamaz, ondan gelir elde edemezsin.
+- Dağıtırsan bu lisans metnini ve telif bildirimini birlikte vermelisin.
+
+Ticari kullanım için ayrı izin gerekir.
+
+X/Twitter ile bağlantılı resmî bir ürün değildir.

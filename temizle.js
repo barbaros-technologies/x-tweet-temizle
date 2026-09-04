@@ -1,4 +1,6 @@
-// X Tweet Temizle v1 — Barbaros Technologies, MIT.
+// X Tweet Temizle — BarbarOS Technologies LLC.
+// Lisans: PolyForm Noncommercial 1.0.0 (bkz. LICENSE.md). Ticari kullanim ve
+// urunlestirme YASAKTIR; kisisel ve kar amaci gutmeyen kullanim serbesttir.
 // Kendi profilindeki gonderileri ekrandan tek tek siler. Arsiv gerekmez.
 // Sunucu yok, ajan yok, ucuncu tarafa veri gitmez. Acik oturum uzerinden calisir.
 (function () {
