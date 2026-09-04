@@ -6,7 +6,14 @@
 
   // ---- Sabitler -------------------------------------------------------------
   const DELETE_WORDS = new Set(["delete", "sil"]);
-  const UNDO_WORDS = new Set(["undo repost", "undo retweet", "repostu geri al", "retweeti geri al"]);
+  // Repost geri alma onayinin GORUNEN metni. X Turkce arayuzu "Yeniden gonderi"
+  // terimini kullanir; canli arayuzde dogrulanan metin "Yeniden gonderiyi geri al".
+  // Liste eksik olursa her repost "onay taninamadi" ile durur, hicbiri silinmez.
+  const UNDO_WORDS = new Set([
+    "undo repost", "undo retweet",
+    "yeniden gönderiyi geri al", "yeniden gonderiyi geri al",
+    "repostu geri al", "retweeti geri al",
+  ]);
   const MIN_DELAY = 1400;      // silmeler arasi en az bekleme
   const MAX_DELAY = 2400;      // silmeler arasi en fazla bekleme
   const PAUSE_EVERY = 40;      // her N silmede bir uzun mola
@@ -292,7 +299,7 @@
     ].join(";");
 
     const title = document.createElement("div");
-    title.textContent = "X Tweet Temizle v1.4";
+    title.textContent = "X Tweet Temizle v1.5";
     title.style.cssText = "font-weight:600;margin-bottom:8px";
 
     const info = document.createElement("div");
@@ -363,7 +370,7 @@
       state.owner = null;
       alert(
         "Bu sayfada silinecek gönderi görünmüyor.\n\n" +
-        "TEŞHİS (v1.4) — hesap: @" + me + "\n" +
+        "TEŞHİS (v1.5) — hesap: @" + me + "\n" +
         "gönderi kutusu (article): " + diag.article + "\n" +
         "görünür: " + diag.gorunur + "\n" +
         "kimliği çözülen: " + diag.kimlik + "\n" +
