@@ -299,7 +299,7 @@
     ].join(";");
 
     const title = document.createElement("div");
-    title.textContent = "X Tweet Temizle v1.5";
+    title.textContent = "X Tweet Temizle v1.6";
     title.style.cssText = "font-weight:600;margin-bottom:8px";
 
     const info = document.createElement("div");
@@ -370,7 +370,7 @@
       state.owner = null;
       alert(
         "Bu sayfada silinecek gönderi görünmüyor.\n\n" +
-        "TEŞHİS (v1.5) — hesap: @" + me + "\n" +
+        "TEŞHİS (v1.6) — hesap: @" + me + "\n" +
         "gönderi kutusu (article): " + diag.article + "\n" +
         "görünür: " + diag.gorunur + "\n" +
         "kimliği çözülen: " + diag.kimlik + "\n" +
@@ -398,15 +398,13 @@
     ui.busy(true); ui.count();
     ui.log("Başladı: @" + me);
 
+    // Baslatildiktan SONRA hicbir sey sorulmaz: bitis ve hata bilgisi de
+    // bloklayan pencere yerine panele yazilir, islem kesintisiz akar.
     try {
       await loop(ui);
-      ui.log("Bitti. Silinen: " + state.done + " · Atlanan: " + state.failed);
-      alert("İşlem bitti.\n\nSilinen: " + state.done + "\nAtlanan: " + state.failed +
-            "\n\nBu, hesabın tamamen temizlendiği anlamına gelmez. Sayfayı yenileyip tekrar çalıştırabilirsin.");
+      ui.log("BİTTİ — silinen: " + state.done + " · atlanan: " + state.failed);
     } catch (e) {
-      ui.log("DURDU: " + (e.message || e));
-      alert("İşlem durdu.\n\n" + (e.message || e) +
-            "\n\nSilinen: " + state.done + "\nÖnceden silinenler geri alınmaz.");
+      ui.log("DURDU: " + (e.message || e) + " (silinen: " + state.done + ")");
     } finally {
       state.running = false; state.stop = false;
       ui.busy(false); ui.count();
