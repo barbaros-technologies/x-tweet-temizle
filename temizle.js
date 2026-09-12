@@ -203,11 +203,18 @@
   }
 
   // ---- Sekme gezinme --------------------------------------------------------
-  // Gonderiler+yanitlar bir sekmede, RT'ler AYRI sekmededir ve birbirinde hic
-  // gorunmezler. Tek baslatmada hepsini temizlemek icin sekmeleri kendimiz
-  // geziyoruz. X tek sayfa uygulamasi oldugundan sekme baglantisina tiklamak
-  // sayfayi yeniden yuklemez; script calismaya devam eder.
-  const TABS = ["with_replies", "reposts"];
+  // X profil sekmeleri UC ayri akistir ve birbirinde gorunmezler:
+  //   ""             Gonderiler        -> kendi gonderilerin + alintilarin
+  //   "with_replies" Yanitlar          -> YALNIZ yanitlar (eski "gonderiler ve
+  //                                       yanitlar" birlesik sekmesi artik yok)
+  //   "reposts"      Yeniden gonderiler -> repost'lar
+  // 2026-09-13'te canli arayuzde olculdu: Yanitlar sekmesi bosken Gonderiler
+  // sekmesinde tweetler duruyordu. Gonderiler sekmesi listede olmazsa kendi
+  // tweetlerin HIC silinmez, yalniz RT'ler gider. Tek baslatmada hepsini
+  // temizlemek icin uc sekmeyi de kendimiz geziyoruz. X tek sayfa uygulamasi
+  // oldugundan sekme baglantisina tiklamak sayfayi yeniden yuklemez.
+  const TABS = ["", "with_replies", "reposts"];
+  const tabName = (tab) => tab || "gonderiler";
 
   function currentTab() {
     const p = location.pathname.toLowerCase().replace(/\/$/, "");
@@ -216,15 +223,15 @@
   }
 
   async function gotoTab(ui, tab) {
-    const target = "/" + state.owner + "/" + tab;
+    const target = "/" + state.owner + (tab ? "/" + tab : "");
     const link = [...document.querySelectorAll('a[role="tab"]')].find((a) => {
       try { return new URL(a.href, location.origin).pathname.toLowerCase().replace(/\/$/, "") === target; }
       catch (_) { return false; }
     });
-    if (!link) { ui.log("Sekme bağlantısı bulunamadı: " + tab); return false; }
+    if (!link) { ui.log("Sekme bağlantısı bulunamadı: " + tabName(tab)); return false; }
     link.click();
     const ok = await waitFor(() => currentTab() === tab ? true : null);
-    if (!ok) { ui.log("Sekmeye geçilemedi: " + tab); return false; }
+    if (!ok) { ui.log("Sekmeye geçilemedi: " + tabName(tab)); return false; }
     await sleep(2500);   // zaman akisinin yuklenmesini bekle
     return true;
   }
@@ -234,12 +241,8 @@
   async function loop(ui) {
     for (const tab of TABS) {
       if (state.stop) return;
-      if (currentTab() !== tab) {
-        ui.log("--- sekme: " + tab + " ---");
-        if (!(await gotoTab(ui, tab))) continue;
-      } else {
-        ui.log("--- sekme: " + tab + " ---");
-      }
+      ui.log("--- sekme: " + tabName(tab) + " ---");
+      if (currentTab() !== tab && !(await gotoTab(ui, tab))) continue;
       await clearTab(ui);
     }
   }
@@ -249,7 +252,8 @@
     let streak = 0;   // ust uste basarisiz islem sayaci
     while (!state.stop) {
       guard();
-      const list = candidates();
+      const diag = {};
+      const list = candidates(diag);
 
       if (!list.length) {
         // Korlemesine N kez kaydirmak yerine akisin gercekten bittigini olc:
@@ -259,7 +263,13 @@
         await sleep(1200);
         const grew = document.body.scrollHeight > before;
         emptyScrolls = grew ? 0 : emptyScrolls + 1;
-        if (emptyScrolls >= SCROLL_TRIES) { ui.log("Bu sekmede silinecek kalmadı."); return; }
+        if (emptyScrolls >= SCROLL_TRIES) {
+          // Ekranda gonderi VARKEN aday cikmadiysa bu "temiz" degil, "goremedim"
+          // demektir. Eleme sayaclarini yaz ki sebebi panelden okunabilsin.
+          ui.log("Bu sekmede silinecek kalmadı.");
+          if (diag.gorunur) ui.log("Görünen " + diag.gorunur + " gönderi elendi — kimlik:" + diag.kimlik + " benim:" + diag.benim + " menü:" + diag.caret + " atlanan:" + diag.atlanan);
+          return;
+        }
         ui.log(grew ? "Yeni kayıtlar yükleniyor…" : "Akışın sonu (" + emptyScrolls + "/" + SCROLL_TRIES + ")");
         continue;
       }
@@ -305,7 +315,7 @@
     ].join(";");
 
     const title = document.createElement("div");
-    title.textContent = "X Tweet Temizle v1.8";
+    title.textContent = "X Tweet Temizle v1.9";
     title.style.cssText = "font-weight:600;margin-bottom:8px";
 
     const info = document.createElement("div");
@@ -351,16 +361,15 @@
     if (!me) { alert("Açık X hesabı doğrulanamadı. Sayfayı yenileyip tekrar dene."); return; }
 
     // Yalnizca kendi profil sayfanda calis: baskasinin akisinda yanlislikla islem yapma.
-    // Kendi profilinin sekmeleri. RT'ler ayri bir sekmede (/reposts) durur ve
-    // diger sekmelerde hic gorunmez; o sekme izinli olmazsa RT'ler asla silinmez.
+    // Kendi profilinin uc sekmesi de izinli; hangisinden baslanirsa baslansin
+    // loop() ucunu de gezer (bkz. TABS).
     const path = location.pathname.toLowerCase().replace(/\/$/, "");
     const allowed = ["/" + me, "/" + me + "/with_replies", "/" + me + "/reposts"];
     if (!allowed.includes(path)) {
       alert(
-        "Önce kendi profilinin şu sekmelerinden birine git:\n\n" +
-        "Gönderiler + yanıtlar:  https://x.com/" + me + "/with_replies\n" +
-        "Repost'lar:              https://x.com/" + me + "/reposts\n\n" +
-        "Tek başlatma yeter: ikisini de kendisi gezer."
+        "Önce kendi profiline git:\n\n" +
+        "https://x.com/" + me + "\n\n" +
+        "Tek başlatma yeter: Gönderiler, Yanıtlar ve Yeniden gönderiler sekmelerini kendisi gezer."
       );
       return;
     }
@@ -381,7 +390,7 @@
       "SON ONAY — @" + me + "\n\n" +
       "HEPSİ SİLİNECEK." + (total ? " Profilinde toplam " + total + " gönderi görünüyor." : "") + "\n\n" +
       "Bu sekmede şu an " + found + " gönderi görünüyor — ama bu bir sınır değil. " +
-      "İşlem sayfayı kendisi kaydırır, sonra YANITLAR ve YENİDEN GÖNDERİLER " +
+      "İşlem sayfayı kendisi kaydırır; GÖNDERİLER, YANITLAR ve YENİDEN GÖNDERİLER " +
       "sekmelerini sırayla gezer ve silinecek hiçbir şey kalmayana kadar devam eder.\n\n" +
       "Kendi gönderilerin, yanıtların ve alıntıların KALICI olarak silinir; " +
       "repost'ların geri alınır. Başkasının gönderisine dokunulmaz.\n\n" +

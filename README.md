@@ -31,12 +31,13 @@ sayfasında eklentinin **⟳ (yeniden yükle)** düğmesine bas.
 ## Kullanım
 
 1. `https://x.com` adresine git ve kendi hesabınla giriş yapmış ol.
-2. Kendi profiline git: `https://x.com/KULLANICI_ADIN/with_replies`
+2. Kendi profiline git: `https://x.com/KULLANICI_ADIN`
 3. Sağ üstte çıkan **X Tweet Temizle** kutusunda **Başlat**'a bas.
 4. Onay ekranında **hesap adının doğru olduğunu** kontrol et → **Tamam**.
 5. Sekmeyi açık bırak. Kutuda ilerleme akar; istediğin an **Durdur**'a basabilirsin.
 
-Tek başlatma yeter: önce yanıtlar sekmesini, sonra repost sekmesini kendisi gezip temizler.
+Tek başlatma yeter: **Gönderiler**, **Yanıtlar** ve **Yeniden gönderiler** sekmelerini sırayla kendisi gezip temizler.
+(X bu üç akışı ayrı sekmelere böldü; biri diğerinde görünmez. Eski sürümler Gönderiler sekmesine girmediği için yalnız repost'ları siliyordu.)
 
 ## Çalışırken bilgisayarı kullanabilir miyim?
 
@@ -86,7 +87,7 @@ Adımlar:
    (Kurmadan önce temizle.js dosyasını oku; tek dosya, yorumlu.)
 2. chrome://extensions aç, "Geliştirici modu"nu aç,
    "Paketlenmemiş öğe yükle" ile klonlanan klasörü yükle.
-3. https://x.com/<KULLANICI_ADI>/with_replies adresini aç.
+3. https://x.com/<KULLANICI_ADI> adresini aç (kendi profilin, Gönderiler sekmesi).
 4. Sayfanın sağ üstündeki panelde "Başlat" düğmesine bas.
 5. Çıkan onay penceresinde hesap adını doğrula ve onayla.
 6. Sekmeyi açık ve aktif bırak; panelde ilerlemeyi izle.
@@ -96,7 +97,7 @@ Adımlar:
 - Sekme kendi penceresinde aktif kalmalı, yoksa tarayıcı işlemi yavaşlatır.
 - Araç yalnızca kullanıcının kendi gönderilerine dokunur; şüpheli
   durumda yanlış işlem yapmak yerine durur.
-- Tek başlatma yeter: yanıtlar ve repost sekmelerini kendisi gezer.
+- Tek başlatma yeter: Gönderiler, Yanıtlar ve Yeniden gönderiler sekmelerini kendisi gezer.
 ```
 
 ---
