@@ -20,7 +20,8 @@
   const MAX_DELAY = 2400;      // silmeler arasi en fazla bekleme
   const PAUSE_EVERY = 40;      // her N silmede bir uzun mola
   const PAUSE_MS = 30000;      // uzun mola suresi
-  const SCROLL_TRIES = 2;      // akis buyumeden kac tur sonra sekme bitmis sayilsin
+  const SCROLL_TRIES = 3;      // akis buyumeden kac tur sonra sekme bitmis sayilsin
+  const SCROLL_WAIT = 2000;    // kaydirma sonrasi X'in yeni kayit getirmesine taninan sure
   const STEP_TIMEOUT = 12000;  // tek bir arayuz adimi icin bekleme tavani
 
   class StopError extends Error {}
@@ -271,11 +272,17 @@
           continue;
         }
         if (hiddenWarned) { ui.log("Sekme öne geldi, devam."); hiddenWarned = false; emptyScrolls = 0; }
+        // X hala yukluyorsa (donen halka) "akisin sonu" sayma. Taze acilan
+        // sekmede ilk sayfa gelmeden 2 tur kaydirip "bitti" demistik (2026-09-13).
+        if ([...document.querySelectorAll('[data-testid="primaryColumn"] [role="progressbar"]')].some(visible)) {
+          await sleep(1000);
+          continue;
+        }
         // Korlemesine N kez kaydirmak yerine akisin gercekten bittigini olc:
         // sayfa yuksekligi buyumuyorsa X yeni kayit yuklemiyor demektir.
         const before = document.body.scrollHeight;
         scrollTo(0, before);
-        await sleep(1200);
+        await sleep(SCROLL_WAIT);
         const grew = document.body.scrollHeight > before;
         emptyScrolls = grew ? 0 : emptyScrolls + 1;
         if (emptyScrolls >= SCROLL_TRIES) {
@@ -330,7 +337,7 @@
     ].join(";");
 
     const title = document.createElement("div");
-    title.textContent = "X Tweet Temizle v1.10";
+    title.textContent = "X Tweet Temizle v1.11";
     title.style.cssText = "font-weight:600;margin-bottom:8px";
 
     const info = document.createElement("div");
