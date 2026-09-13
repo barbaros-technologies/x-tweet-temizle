@@ -250,12 +250,27 @@
   async function clearTab(ui) {
     let emptyScrolls = 0;
     let streak = 0;   // ust uste basarisiz islem sayaci
+    let hiddenWarned = false;
     while (!state.stop) {
       guard();
       const diag = {};
       const list = candidates(diag);
 
       if (!list.length) {
+        // Gizli sekmede X yeni gonderi YUKLEMEZ (sonsuz kaydirma
+        // IntersectionObserver'a bagli, o da arka planda tetiklenmez).
+        // Burada "akisin sonu" demek yanlis teshis olur: 2026-09-13'te 221
+        // gonderili profil, sekme arka plana dusunce 3 silmeden sonra "bitti"
+        // dedi. Sekme gorunur olana kadar sayaci ilerletmeden bekle.
+        if (document.hidden) {
+          if (!hiddenWarned) {
+            ui.log("Sekme arka planda: X gizli sekmede yeni gönderi yüklemez. Bu sekmeyi öne getir, bekliyorum…");
+            hiddenWarned = true;
+          }
+          await sleep(1500);
+          continue;
+        }
+        if (hiddenWarned) { ui.log("Sekme öne geldi, devam."); hiddenWarned = false; emptyScrolls = 0; }
         // Korlemesine N kez kaydirmak yerine akisin gercekten bittigini olc:
         // sayfa yuksekligi buyumuyorsa X yeni kayit yuklemiyor demektir.
         const before = document.body.scrollHeight;
@@ -315,7 +330,7 @@
     ].join(";");
 
     const title = document.createElement("div");
-    title.textContent = "X Tweet Temizle v1.9";
+    title.textContent = "X Tweet Temizle v1.10";
     title.style.cssText = "font-weight:600;margin-bottom:8px";
 
     const info = document.createElement("div");
