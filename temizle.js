@@ -107,7 +107,12 @@
   // ---- Durum ----------------------------------------------------------------
   // skipped: islenemedigi icin bir daha denenmeyecek kimlikler. Bu kume olmadan
   // silinemeyen tek bir gonderi donguyu sonsuza kadar kilitler.
-  const state = { running: false, stop: false, done: 0, failed: 0, owner: null, skipped: new Set() };
+  const state = { running: false, stop: false, done: 0, failed: 0, owner: null, skipped: new Set(), seen: 0 };
+  // X bazen akisi BOS dondurur (toplu silme sonrasi / onbellek): ayni profil
+  // art arda yuklendiginde bir kez bos, bir kez 2 gonderi gosterdi (2026-09-13).
+  // Bos gecen turdan sonra sayfa yenilenip tekrar denenir; sayac sessionStorage'da.
+  const RETRY_KEY = "xTweetTemizleYenileme";
+  const MAX_RELOADS = 6;
 
   function guard() {
     if (state.stop) throw new StopError("Kullanıcı durdurdu.");
@@ -137,6 +142,7 @@
       d.article++;
       if (!visible(article)) continue;
       d.gorunur++;
+      state.seen++;
       const id = articleIdentity(article);
       if (!id) continue;
       d.kimlik++;
@@ -247,6 +253,24 @@
       if (currentTab() !== tab && !(await gotoTab(ui, tab))) continue;
       await clearTab(ui);
     }
+    // Profil sayaci hala gonderi diyor ama bu turda hic gonderi GORULMEDIYSE
+    // X bos akis dondurmus olabilir. Sayfayi #otomatik ile yenile; icerik
+    // betigi yeniden yuklenince kendiliginden devam eder. Silme oldugunda
+    // sayac sifirlanir; art arda MAX_RELOADS bos tur sonra durulur.
+    const total = Number(totalPosts() || 0);
+    let reloads = Number(sessionStorage.getItem(RETRY_KEY) || 0);
+    if (state.done > 0) { reloads = 0; sessionStorage.setItem(RETRY_KEY, "0"); }
+    if (state.stop || total <= state.done) return;
+    if (reloads >= MAX_RELOADS) {
+      ui.log("X " + MAX_RELOADS + " yenilemede de gönderi göstermedi; profil sayacı (" + total + ") bayat olabilir. Daha sonra tekrar dene.");
+      sessionStorage.setItem(RETRY_KEY, "0");
+      return;
+    }
+    sessionStorage.setItem(RETRY_KEY, String(reloads + 1));
+    ui.log("Profil sayacı " + total + " diyor ama akış boş geldi. 15 sn sonra sayfa yenilenip tekrar denenecek (" + (reloads + 1) + "/" + MAX_RELOADS + ").");
+    for (let i = 15; i > 0; i--) { await sleep(1000); if (state.stop) return; }
+    location.href = "https://x.com/" + state.owner + "#otomatik";
+    location.reload();
   }
 
   async function clearTab(ui) {
@@ -346,7 +370,7 @@
     ].join(";");
 
     const title = document.createElement("div");
-    title.textContent = "X Tweet Temizle v1.13";
+    title.textContent = "X Tweet Temizle v1.14";
     title.style.cssText = "font-weight:600;margin-bottom:8px";
 
     const info = document.createElement("div");
