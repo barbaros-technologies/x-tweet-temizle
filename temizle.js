@@ -21,6 +21,7 @@
   const PAUSE_EVERY = 40;      // her N silmede bir uzun mola
   const PAUSE_MS = 30000;      // uzun mola suresi
   const SCROLL_TRIES = 3;      // akis buyumeden kac tur sonra sekme bitmis sayilsin
+  const SCROLL_TRIES_BEKLENEN = 15; // profil sayaci hala gonderi diyorsa sabir (15x2 sn)
   const SCROLL_WAIT = 2000;    // kaydirma sonrasi X'in yeni kayit getirmesine taninan sure
   const STEP_TIMEOUT = 12000;  // tek bir arayuz adimi icin bekleme tavani
 
@@ -278,21 +279,29 @@
           await sleep(1000);
           continue;
         }
-        // Korlemesine N kez kaydirmak yerine akisin gercekten bittigini olc:
-        // sayfa yuksekligi buyumuyorsa X yeni kayit yuklemiyor demektir.
+        // Insan gibi KADEMELI kaydir (bir ekran kadar). En alta tek hamlede
+        // atlamak X'in sanal listesini bos birakiyordu: 218 gonderili profilde
+        // 3 turda "akisin sonu" deyip cikti (2026-09-13). Akisin bittigine
+        // ancak en altta olup yukseklik buyumeyince karar verilir; profil
+        // sayaci hala gonderi gosteriyorsa cok daha uzun sabredilir.
         const before = document.body.scrollHeight;
-        scrollTo(0, before);
+        const atBottom = scrollY + innerHeight >= before - 4;
+        scrollBy(0, Math.floor(innerHeight * 0.9));
         await sleep(SCROLL_WAIT);
-        const grew = document.body.scrollHeight > before;
-        emptyScrolls = grew ? 0 : emptyScrolls + 1;
-        if (emptyScrolls >= SCROLL_TRIES) {
+        const after = document.body.scrollHeight;
+        const grew = after > before;
+        emptyScrolls = (grew || !atBottom) ? 0 : emptyScrolls + 1;
+        const total = Number(totalPosts() || 0);
+        const bekle = total > state.done ? SCROLL_TRIES_BEKLENEN : SCROLL_TRIES;
+        ui.log("kaydır: " + Math.round(scrollY) + "/" + after + (grew ? " büyüdü" : atBottom ? " dipte " + emptyScrolls + "/" + bekle : "") +
+               " · article:" + diag.article + " görünür:" + diag.gorunur + " kimlik:" + diag.kimlik + " benim:" + diag.benim + " menü:" + diag.caret);
+        if (emptyScrolls >= bekle) {
           // Ekranda gonderi VARKEN aday cikmadiysa bu "temiz" degil, "goremedim"
           // demektir. Eleme sayaclarini yaz ki sebebi panelden okunabilsin.
-          ui.log("Bu sekmede silinecek kalmadı.");
+          ui.log("Bu sekmede silinecek kalmadı." + (total > state.done ? " (Profil sayacı " + total + " diyor; X daha fazlasını yüklemedi. Sayfayı yenileyip tekrar başlat.)" : ""));
           if (diag.gorunur) ui.log("Görünen " + diag.gorunur + " gönderi elendi — kimlik:" + diag.kimlik + " benim:" + diag.benim + " menü:" + diag.caret + " atlanan:" + diag.atlanan);
           return;
         }
-        ui.log(grew ? "Yeni kayıtlar yükleniyor…" : "Akışın sonu (" + emptyScrolls + "/" + SCROLL_TRIES + ")");
         continue;
       }
       emptyScrolls = 0;
@@ -337,7 +346,7 @@
     ].join(";");
 
     const title = document.createElement("div");
-    title.textContent = "X Tweet Temizle v1.12";
+    title.textContent = "X Tweet Temizle v1.13";
     title.style.cssText = "font-weight:600;margin-bottom:8px";
 
     const info = document.createElement("div");
@@ -353,7 +362,7 @@
     stop.style.cssText = "width:100%;padding:8px;margin-top:6px;border:0;border-radius:8px;background:#3a1417;color:#f4212e;font-weight:600;cursor:pointer;display:none";
 
     const log = document.createElement("div");
-    log.style.cssText = "margin-top:10px;max-height:120px;overflow:auto;color:#8b98a5;font-size:12px";
+    log.style.cssText = "margin-top:10px;max-height:260px;overflow:auto;color:#8b98a5;font-size:12px";
 
     box.append(title, info, start, stop, log);
     document.body.appendChild(box);
