@@ -378,7 +378,7 @@
     ].join(";");
 
     const title = document.createElement("div");
-    title.textContent = "X Tweet Temizle v1.15";
+    title.textContent = "X Tweet Temizle v1.16";
     title.style.cssText = "font-weight:600;margin-bottom:8px";
 
     const info = document.createElement("div");
@@ -433,7 +433,10 @@
     if (state.running) return;
 
     const me = currentUser();
-    if (!me) { alert("Açık X hesabı doğrulanamadı. Sayfayı yenileyip tekrar dene."); return; }
+    if (!me) {
+      if (auto) { ui.log("Otomatik başlatma: açık hesap doğrulanamadı (sayfa tam yüklenmedi?)."); return; }
+      alert("Açık X hesabı doğrulanamadı. Sayfayı yenileyip tekrar dene."); return;
+    }
 
     // Yalnizca kendi profil sayfanda calis: baskasinin akisinda yanlislikla islem yapma.
     // Kendi profilinin uc sekmesi de izinli; hangisinden baslanirsa baslansin
@@ -504,9 +507,19 @@
     window.__xTweetTemizleKurulu = true;
     const install = () => {
       const ui = buildUI();
-      // Profil basligi ve akis yuklensin diye kisa bekleme; begin() kendi
-      // hesap/yol dogrulamasini yine yapar.
-      if (autoRequested()) setTimeout(() => void begin(ui, true), 2500);
+      // Otomatik modda hesap baglantisi ve profil sekmeleri gelene kadar bekle
+      // (en fazla 40 sn); sabit 2,5 sn beklemek yavas yuklemede bos gecti.
+      if (autoRequested()) {
+        ui.log("#otomatik algılandı, sayfa yüklenince başlayacak…");
+        const until = Date.now() + 40000;
+        const tick = () => {
+          const ready = currentUser() && document.querySelector('a[role="tab"]');
+          if (ready) { setTimeout(() => void begin(ui, true), 1500); return; }
+          if (Date.now() > until) { ui.log("Otomatik başlatma: sayfa 40 sn içinde hazır olmadı."); return; }
+          setTimeout(tick, 500);
+        };
+        setTimeout(tick, 1000);
+      }
     };
     if (document.body) install();
     else addEventListener("DOMContentLoaded", install, { once: true });
