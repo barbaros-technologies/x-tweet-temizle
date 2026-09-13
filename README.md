@@ -39,6 +39,18 @@ sayfasında eklentinin **⟳ (yeniden yükle)** düğmesine bas.
 Tek başlatma yeter: **Gönderiler**, **Yanıtlar** ve **Yeniden gönderiler** sekmelerini sırayla kendisi gezip temizler.
 (X bu üç akışı ayrı sekmelere böldü; biri diğerinde görünmez. Eski sürümler Gönderiler sekmesine girmediği için yalnız repost'ları siliyordu.)
 
+## Tıklamadan başlatma (ajanlar için)
+
+Adresin sonuna `#otomatik` ekleyerek açarsan onay penceresi çıkmaz; panelde
+5 saniyelik geri sayım yazılır ve işlem kendiliğinden başlar:
+
+```
+https://x.com/KULLANICI_ADIN#otomatik
+```
+
+Etiketi ekleyen kişi onayı vermiş sayılır. Geri sayım sırasında **Durdur** iptal eder.
+Tarayıcıyı bir yapay zekâ ajanı sürüyorsa (tıklama zor) bu yolu kullan.
+
 ## Çalışırken bilgisayarı kullanabilir miyim?
 
 Evet, ama x.com sekmesi **kendi penceresinde aktif sekme** kalmalı.
@@ -89,6 +101,8 @@ Adımlar:
    "Paketlenmemiş öğe yükle" ile klonlanan klasörü yükle.
 3. https://x.com/<KULLANICI_ADI> adresini aç (kendi profilin, Gönderiler sekmesi).
 4. Sayfanın sağ üstündeki panelde "Başlat" düğmesine bas.
+   (Tıklayamıyorsan adresi https://x.com/<KULLANICI_ADI>#otomatik olarak aç;
+   onay penceresi çıkmaz, 5 sn geri sayımla kendisi başlar.)
 5. Çıkan onay penceresinde hesap adını doğrula ve onayla.
 6. Sekmeyi açık ve aktif bırak; panelde ilerlemeyi izle.
 

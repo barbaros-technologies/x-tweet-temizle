@@ -337,7 +337,7 @@
     ].join(";");
 
     const title = document.createElement("div");
-    title.textContent = "X Tweet Temizle v1.11";
+    title.textContent = "X Tweet Temizle v1.12";
     title.style.cssText = "font-weight:600;margin-bottom:8px";
 
     const info = document.createElement("div");
@@ -370,13 +370,25 @@
       busy(on) { start.style.display = on ? "none" : "block"; stop.style.display = on ? "block" : "none"; }
     };
 
-    start.addEventListener("click", () => void begin(ui));
+    start.addEventListener("click", () => void begin(ui, false));
     stop.addEventListener("click", () => { state.stop = true; ui.log("Durduruluyor…"); });
     return ui;
   }
 
   // ---- Baslatma -------------------------------------------------------------
-  async function begin(ui) {
+  // Otomatik baslatma: sayfa "#otomatik" etiketiyle acildiysa onay penceresi
+  // ACILMAZ; panelde 5 sn geri sayim yazilir ve islem kendiliginden baslar.
+  // Tarayiciyi bir ajan surerken (Haydar vb.) tiklama gerektirmemesi icin.
+  // Etiketi ekleyen kisi onayi vermis sayilir; geri sayimda Durdur iptal eder.
+  // X tek sayfa uygulamasi adresi hemen degistirebildigi icin ILK yuklenen
+  // adrese bakilir (navigation entry), sonradan tiklanan sekmelere bulasmaz.
+  function autoRequested() {
+    const nav = performance.getEntriesByType("navigation")[0];
+    const first = (nav && nav.name) || location.href;
+    return /#otomatik$/.test(first) || /#otomatik$/.test(location.href);
+  }
+
+  async function begin(ui, auto) {
     if (state.running) return;
 
     const me = currentUser();
@@ -388,6 +400,7 @@
     const path = location.pathname.toLowerCase().replace(/\/$/, "");
     const allowed = ["/" + me, "/" + me + "/with_replies", "/" + me + "/reposts"];
     if (!allowed.includes(path)) {
+      if (auto) { ui.log("Otomatik başlatma iptal: bu sayfa kendi profilin değil."); return; }
       alert(
         "Önce kendi profiline git:\n\n" +
         "https://x.com/" + me + "\n\n" +
@@ -408,7 +421,16 @@
     const found = candidates().length;
 
     const total = totalPosts();
-    if (!confirm(
+    if (auto) {
+      state.running = true; state.stop = false;
+      ui.busy(true);
+      ui.log("OTOMATİK BAŞLATMA (#otomatik): @" + me + (total ? " · " + total + " gönderi" : "") + " — 5 sn içinde HEPSİ silinmeye başlar. İptal için Durdur.");
+      for (let i = 5; i > 0; i--) {
+        ui.log(i + "…");
+        await sleep(1000);
+        if (state.stop) { ui.log("İptal edildi."); state.running = false; state.stop = false; state.owner = null; ui.busy(false); return; }
+      }
+    } else if (!confirm(
       "SON ONAY — @" + me + "\n\n" +
       "HEPSİ SİLİNECEK." + (total ? " Profilinde toplam " + total + " gönderi görünüyor." : "") + "\n\n" +
       "Bu sekmede şu an " + found + " gönderi görünüyor — ama bu bir sınır değil. " +
@@ -439,7 +461,13 @@
   // Panel yalnizca bir kez kurulsun (X tek sayfa uygulamasi, yeniden calisabilir).
   if (!window.__xTweetTemizleKurulu) {
     window.__xTweetTemizleKurulu = true;
-    if (document.body) buildUI();
-    else addEventListener("DOMContentLoaded", buildUI, { once: true });
+    const install = () => {
+      const ui = buildUI();
+      // Profil basligi ve akis yuklensin diye kisa bekleme; begin() kendi
+      // hesap/yol dogrulamasini yine yapar.
+      if (autoRequested()) setTimeout(() => void begin(ui, true), 2500);
+    };
+    if (document.body) install();
+    else addEventListener("DOMContentLoaded", install, { once: true });
   }
 })();
