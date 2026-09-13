@@ -269,8 +269,16 @@
     sessionStorage.setItem(RETRY_KEY, String(reloads + 1));
     ui.log("Profil sayacı " + total + " diyor ama akış boş geldi. 15 sn sonra sayfa yenilenip tekrar denenecek (" + (reloads + 1) + "/" + MAX_RELOADS + ").");
     for (let i = 15; i > 0; i--) { await sleep(1000); if (state.stop) return; }
-    location.href = "https://x.com/" + state.owner + "#otomatik";
-    location.reload();
+    // Ayni yolda isek hash degisimi sayfayi yenilemez -> reload gerekir.
+    // Farkli yoldaysak (orn. /reposts) href atamasi tam gezinmedir; arkasindan
+    // reload() cagirmak o gezinmeyi iptal edip ESKI sayfayi yeniler (olculdu).
+    const base = "/" + state.owner;
+    if (location.pathname.toLowerCase().replace(/\/$/, "") === base) {
+      location.hash = "#otomatik";
+      location.reload();
+    } else {
+      location.href = "https://x.com" + base + "#otomatik";
+    }
   }
 
   async function clearTab(ui) {
@@ -370,7 +378,7 @@
     ].join(";");
 
     const title = document.createElement("div");
-    title.textContent = "X Tweet Temizle v1.14";
+    title.textContent = "X Tweet Temizle v1.15";
     title.style.cssText = "font-weight:600;margin-bottom:8px";
 
     const info = document.createElement("div");

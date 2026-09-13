@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "X Tweet Temizle",
-  "version": "1.6",
+  "version": "1.7",
   "description": "Kendi X profilindeki gonderileri, yanitlari ve alintilari ekrandan tek tek siler; RT'leri geri alir. Sunucusuz, acik kaynak.",
   "host_permissions": ["https://x.com/*"],
   "content_scripts": [
